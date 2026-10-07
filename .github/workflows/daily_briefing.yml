@@ -2,9 +2,8 @@ name: Daily AI Digest
 
 on:
   schedule:
-    # Runs at 13:00 UTC every day (07:00 AM Central Standard Time)
-    - cron: '0 13 * * *'
-  # Enables the manual trigger button inside the GitHub UI
+    # 11:45 UTC = 05:45 AM Guatemala (UTC-6)
+    - cron: '45 11 * * *'
   workflow_dispatch:
 
 jobs:
@@ -20,11 +19,11 @@ jobs:
           python-version: '3.11'
 
       - name: Install Dependencies
-        run: pip install feedparser requests google-genai
+        run: pip install feedparser requests
 
       - name: Run Digest Script
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python digest.py
