@@ -35,30 +35,33 @@ def summarize_with_groq(raw_text: str) -> str:
     url = "https://api.groq.com/openai/v1/chat/completions"
     
     prompt = (
-        "You are an elite frontier AI researcher and technical curator. "
-        "Analyze the following incoming raw signals and select the TOP 10 most impactful, early-stage, "
-        "or technically significant developments from the last 24 hours.\n\n"
-        "Selection Philosophy:\n"
-        "- Prioritize emerging architectures, open-weights milestones (e.g., Nous Hermes, unquantized releases), "
-        "novel training paradigms, synthetic data methods, or early incubation research over generic corporate PR.\n"
-        "- Focus on practical technical shifts.\n\n"
-        "Formatting Requirements:\n"
-        "- Exactly 10 items, numbered 1 through 10.\n"
-        "- For each item: **Bold Title** followed by a thoughtful, analytical 2-sentence breakdown explaining "
-        "WHAT it is and WHY it matters technically.\n"
-        "- End each entry with a clean markdown link: [Read Source](URL).\n"
-        "- Separate items with clean line breaks.\n"
-        "- Use standard Telegram-compatible Markdown.\n\n"
-        f"Raw data:\n{raw_text}"
+        "You are an executive AI curator and frontier intelligence analyst.\n\n"
+        "Your task is to review the incoming feed text and deliver an executive daily digest "
+        "consisting of EXACTLY 10 stories split into two balanced categories:\n\n"
+        "🏢 **SECTION 1: ESTABLISHED LABS & INDUSTRY (Items 1 to 5)**\n"
+        "- Coverage: OpenAI, Google DeepMind, Anthropic, Meta, Microsoft, NVIDIA, or major industry benchmarks.\n"
+        "- Focus: Official model launches, enterprise features, compute investments, and major product rollouts.\n\n"
+        "⚡ **SECTION 2: FRONTIER RESEARCH & OPEN-WEIGHTS (Items 6 to 10)**\n"
+        "- Coverage: Community open-weights (e.g., Nous Research/Hermes, community finetunes), arXiv preprints, "
+        "LocalLLaMA breakthroughs, novel training recipes, or early incubation tools.\n"
+        "- Focus: Architectural breakthroughs, synthetic data recipes, and technical shifts before they hit mainstream news.\n\n"
+        "FORMATTING SPECIFICATIONS:\n"
+        "- Provide exactly 10 numbered items total (1-5 in Section 1, 6-10 in Section 2).\n"
+        "- Format each entry as:\n"
+        "  [Number]. **[Headline]**\n"
+        "  [Two-sentence technical analysis: what it is + why it matters].\n"
+        "  [Read Source](URL)\n\n"
+        "- Output clean, Telegram-compatible markdown with clean line breaks between items.\n\n"
+        f"Raw data to curate from:\n{raw_text}"
     )
 
     payload = {
         "model": "qwen/qwen3.6-27b",
         "messages": [
-            {"role": "system", "content": "You are a specialized AI systems curator and technical editor."},
+            {"role": "system", "content": "You are a concise, balanced AI technology curator."},
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.25
+        "temperature": 0.2
     }
     headers = {
         "Authorization": f"Bearer {api_key.strip()}",
