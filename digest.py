@@ -2,11 +2,10 @@ import os
 import requests
 import feedparser
 
-# Feeds focused on early research, open-weights development, and technical breakthroughs
 FEEDS = [
     {"source": "HF Daily Papers", "url": "https://huggingface.co/blog/feed.xml"},
     {"source": "ArXiv CS.AI", "url": "http://export.arxiv.org/rss/cs.AI"},
-    {"source": "LocalLLaMA (Open Source AI)", "url": "https://www.reddit.com/r/LocalLLaMA/.rss"},
+    {"source": "LocalLLaMA", "url": "https://www.reddit.com/r/LocalLLaMA/.rss"},
     {"source": "Machine Learning Reddit", "url": "https://www.reddit.com/r/MachineLearning/.rss"},
     {"source": "MIT Tech Review AI", "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed"},
     {"source": "TechCrunch AI", "url": "https://techcrunch.com/category/artificial-intelligence/feed/"}
@@ -18,18 +17,15 @@ def fetch_feed_data() -> str:
     
     for f in FEEDS:
         try:
-            # Pass custom user-agent to prevent RSS endpoints from blocking
             resp = requests.get(f["url"], headers=headers, timeout=12)
             feed = feedparser.parse(resp.content)
-            
-            # Grab the 4 freshest items per feed to give the LLM plenty of raw signals
             for entry in feed.entries[:4]:
                 title = entry.get("title", "No Title").strip()
                 link = entry.get("link", "").strip()
                 summary = entry.get("summary", "")[:350].replace("\n", " ").strip()
                 feed_items.append(f"Source: {f['source']}\nTitle: {title}\nLink: {link}\nSnippet: {summary}")
         except Exception as e:
-            print(f"Skipping {f['source']} due to fetch error: {e}")
+            print(f"Skipping {f['source']}: {e}")
             continue
 
     return "\n---\n".join(feed_items)
@@ -45,14 +41,14 @@ def summarize_with_groq(raw_text: str) -> str:
         "Selection Philosophy:\n"
         "- Prioritize emerging architectures, open-weights milestones (e.g., Nous Hermes, unquantized releases), "
         "novel training paradigms, synthetic data methods, or early incubation research over generic corporate PR.\n"
-        "- Do not just report big-tech marketing; focus on practical technical shifts.\n\n"
+        "- Focus on practical technical shifts.\n\n"
         "Formatting Requirements:\n"
         "- Exactly 10 items, numbered 1 through 10.\n"
-        "- For each item: **Bold Title** followed by a thoughtful, highly analytical 2-sentence breakdown explaining "
+        "- For each item: **Bold Title** followed by a thoughtful, analytical 2-sentence breakdown explaining "
         "WHAT it is and WHY it matters technically.\n"
         "- End each entry with a clean markdown link: [Read Source](URL).\n"
         "- Separate items with clean line breaks.\n"
-        "- Use standard Telegram-compatible Markdown (avoid nested complex markdown tags).\n\n"
+        "- Use standard Telegram-compatible Markdown.\n\n"
         f"Raw data:\n{raw_text}"
     )
 
@@ -79,14 +75,13 @@ def send_telegram_chunks(message: str):
     chat_id = os.environ["TELEGRAM_CHAT_ID"]
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
-    # Telegram hard limit is 4096 characters. Split cleanly by sections if needed.
+    # Telegram limit is 4096 chars; split by double newlines if needed
     chunk_size = 3800
     chunks = []
     
     if len(message) <= chunk_size:
         chunks = [message]
     else:
-        # Split cleanly around paragraphs/items
         paragraphs = message.split("\n\n")
         current_chunk = ""
         for p in paragraphs:
