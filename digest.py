@@ -32,6 +32,9 @@ def fetch_feed_data() -> str:
 
 def summarize_with_groq(raw_text: str) -> str:
     api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        raise ValueError("GROQ_API_KEY environment variable is missing.")
+
     url = "https://api.groq.com/openai/v1/chat/completions"
     
     prompt = (
@@ -39,11 +42,11 @@ def summarize_with_groq(raw_text: str) -> str:
         "Your task is to review the incoming feed text and deliver an executive daily digest "
         "consisting of EXACTLY 10 stories split into two balanced categories:\n\n"
         "🏢 **SECTION 1: ESTABLISHED LABS & INDUSTRY (Items 1 to 5)**\n"
-        "- Coverage: OpenAI, Google DeepMind, Anthropic, Meta, Microsoft, NVIDIA, or major industry benchmarks.\n"
+        "- Coverage: OpenAI, Google DeepMind, Anthropic, Meta, Microsoft, Apple, NVIDIA, or major industry benchmarks.\n"
         "- Focus: Official model launches, enterprise features, compute investments, and major product rollouts.\n\n"
         "⚡ **SECTION 2: FRONTIER RESEARCH & OPEN-WEIGHTS (Items 6 to 10)**\n"
         "- Coverage: Community open-weights (e.g., Nous Research/Hermes, community finetunes), arXiv preprints, "
-        "LocalLLaMA breakthroughs, novel training recipes, or early incubation tools.\n"
+        "LocalLLaMA breakthroughs, novel training recipes, synthetic data pipelines, or early incubation tools.\n"
         "- Focus: Architectural breakthroughs, synthetic data recipes, and technical shifts before they hit mainstream news.\n\n"
         "FORMATTING SPECIFICATIONS:\n"
         "- Provide exactly 10 numbered items total (1-5 in Section 1, 6-10 in Section 2).\n"
@@ -56,7 +59,7 @@ def summarize_with_groq(raw_text: str) -> str:
     )
 
     payload = {
-        "model": "qwen/qwen3.6-27b",
+        "model": "llama-3.3-70b-versatile",
         "messages": [
             {"role": "system", "content": "You are a concise, balanced AI technology curator."},
             {"role": "user", "content": prompt}
@@ -69,16 +72,22 @@ def summarize_with_groq(raw_text: str) -> str:
     }
 
     res = requests.post(url, json=payload, headers=headers, timeout=45)
+    if not res.ok:
+        print("Groq Error Response Body:", res.text)
     res.raise_for_status()
+    
     data = res.json()
     return data["choices"][0]["message"]["content"]
 
 def send_telegram_chunks(message: str):
-    bot_token = os.environ["TELEGRAM_BOT_TOKEN"]
-    chat_id = os.environ["TELEGRAM_CHAT_ID"]
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    
+    if not bot_token or not chat_id:
+        raise ValueError("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID environment variable is missing.")
+
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
-    # Telegram limit is 4096 chars; split by double newlines if needed
     chunk_size = 3800
     chunks = []
     
@@ -109,7 +118,7 @@ def send_telegram_chunks(message: str):
 if __name__ == "__main__":
     print("Collecting feeds...")
     articles = fetch_feed_data()
-    print("Generating 10-item frontier briefing via Groq...")
+    print("Generating 10-item balanced briefing via Groq...")
     digest = summarize_with_groq(articles)
     print("Sending briefing to Telegram...")
     send_telegram_chunks(digest)
