@@ -59,7 +59,7 @@ def summarize_with_groq(raw_text: str) -> str:
     )
 
     payload = {
-        "model": "llama-3.3-70b-versatile",
+        "model": "llama-3.1-8b-instant",
         "messages": [
             {"role": "system", "content": "You are a concise, balanced AI technology curator."},
             {"role": "user", "content": prompt}
